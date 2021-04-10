@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>BT41+ bluetooth</title>
+    <title>Owon B41T+ with web bluetooth example</title>
 </head>
 <body onload="setInterval(refreshStatus, 1000)">
     <style>
@@ -349,7 +349,7 @@
         /* BLUETOOTH */
         function onDisconnected(event) {
             const device = event.target;
-            log(`Device ${device.name} is disconnected.`);
+            log(`Device ${device.name} is disconnected ***`);
             status = 0;
         }
 
@@ -367,7 +367,7 @@
             }
 
             log('Requesting Bluetooth Device...');
-            navigator.bluetooth.requestDevice({ acceptAllDevices: true })
+            navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: [serviceUuid] })
                 .then(device => {
                     status = 1;
                     log(`Connecting to GATT Server on ${device.name}...`);
@@ -399,24 +399,30 @@
 
         function onStopButtonClick() {
             status = 0;
-            if (myCharacteristic) {
-                myCharacteristic.stopNotifications()
-                    .then(_ => {
-                        log('> Notifications stopped');
-                        myCharacteristic.removeEventListener('characteristicvaluechanged',
-                            handleNotifications);
-                    })
-                    .catch(error => {
-                        log('Argh! ' + error);
-                    });
-            }
-            if (!bluetoothDevice) {
-                return;
-            }
-            log('Disconnecting from Bluetooth Device...');
-            if (bluetoothDevice.gatt.connected) {
-                bluetoothDevice.gatt.disconnect();
-            } else {
+            // Clear the logs and last measure
+            document.getElementById("log").innerHTML = "";
+            document.getElementById("measure").innerHTML = "";
+            try {
+                if (myCharacteristic) {
+                    myCharacteristic.stopNotifications()
+                        .then(_ => {
+                            log('> Notifications stopped');
+                            myCharacteristic.removeEventListener('characteristicvaluechanged',
+                                handleNotifications);
+                        })
+                        .catch(error => {
+                            log('Argh! ' + error);
+                        });
+                    myCharacteristic = null;
+                }
+                
+                log('Disconnecting from Bluetooth Device...');
+                if (bluetoothDevice != null && bluetoothDevice.gatt.connected) {
+                    bluetoothDevice.gatt.disconnect();
+                } else {
+                    log('> Bluetooth Device is already disconnected');
+                }
+            } catch (error) {
                 log('> Bluetooth Device is already disconnected');
             }
         }
@@ -600,7 +606,7 @@
 
 
     </script>
-    <h1>Owon Multimeter<br /></h1>
+    <h1>Owon B41T+ Multimeter<br /></h1>
 	<table>
 	<tr>
 	<td>
