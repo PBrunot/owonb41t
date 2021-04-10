@@ -1,7 +1,7 @@
 # Owon B41t
 Javascript interface for digital multimeter OWON B41T+
 
-Test it here: https://pbrunot.github.io/multimeter.html (requires a modern browser with Javascript Bluetooth enabled)
+Test it here: https://pbrunot.github.io/owonb41t/multimeter.html (requires a modern browser with Javascript Bluetooth enabled)
 
 # Owon meters protocol
 B41T+ follows B35 protocol, which is described here : https://github.com/DeanCording/owonb35
