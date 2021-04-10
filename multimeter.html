@@ -1,0 +1,238 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>BT41+ bluetooth</title>
+</head>
+<body>
+    <script language="javascript">
+	var mtBT41Service = '0000fff0-0000-1000-8000-00805f9b34fb';        // fill in a service you're looking for here
+	var myReading = '0000fff4-0000-1000-8000-00805f9b34fb';   // fill in a characteristic from the service here
+	let log = console.log;
+	var myCharacteristic;
+	var bluetoothDevice;
+
+function onDisconnected(event) {
+  const device = event.target;
+  log(`Device ${device.name} is disconnected.`);
+}
+function time(text) {
+  log('[' + new Date().toJSON().substr(11, 8) + '] ' + text);
+}
+
+function onStartButtonClick() {
+  let serviceUuid = mtBT41Service;
+  
+  
+  if (serviceUuid.startsWith('0x')) {
+    serviceUuid = parseInt(serviceUuid);
+  }
+
+  let characteristicUuid = myReading;
+  if (characteristicUuid.startsWith('0x')) {
+    characteristicUuid = parseInt(characteristicUuid);
+  }
+
+  log('Requesting Bluetooth Device...');
+  navigator.bluetooth.requestDevice({acceptAllDevices: true})
+  .then(device => {
+    log('Connecting to GATT Server...');
+	bluetoothDevice = device;
+	device.addEventListener('gattserverdisconnected', onDisconnected);
+    return bluetoothDevice.gatt.connect();
+  })
+  .then(server => {
+    log('Getting Service...');
+    return server.getPrimaryService(serviceUuid);
+  })
+  .then(service => {
+    log('Getting Characteristic...');
+    return service.getCharacteristic(characteristicUuid);
+  })
+  .then(characteristic => {
+    myCharacteristic = characteristic;
+    return myCharacteristic.startNotifications().then(_ => {
+      log('> Notifications started');
+      myCharacteristic.addEventListener('characteristicvaluechanged',
+          handleNotifications);
+    });
+  })
+  .catch(error => {
+    log('Argh! ' + error);
+  });
+}
+
+function onStopButtonClick() {
+  if (myCharacteristic) {
+    myCharacteristic.stopNotifications()
+    .then(_ => {
+      log('> Notifications stopped');
+      myCharacteristic.removeEventListener('characteristicvaluechanged',
+          handleNotifications);
+    })
+    .catch(error => {
+      log('Argh! ' + error);
+    });
+  }
+  if (!bluetoothDevice) {
+    return;
+  }
+  log('Disconnecting from Bluetooth Device...');
+  if (bluetoothDevice.gatt.connected) {
+    bluetoothDevice.gatt.disconnect();
+  } else {
+    log('> Bluetooth Device is already disconnected');
+  }
+}
+function exponentialBackoff(max, delay, toTry, success, fail) {
+  toTry().then(result => success(result))
+  .catch(_ => {
+    if (max === 0) {
+      return fail();
+    }
+    time('Retrying in ' + delay + 's... (' + max + ' tries left)');
+    setTimeout(function() {
+      exponentialBackoff(--max, delay * 2, toTry, success, fail);
+    }, delay * 1000);
+  });
+}
+const DCV = 0x0;
+const ACV = 0x1;
+const DCA = 0x2;
+const ACA = 0x3;
+const Ohm = 0x4;
+const Cap = 0x5;
+const Hz = 0x6;
+const Duty = 0x7;
+const TempC = 0x8;
+const TempF = 0x9;
+const Diode = 0xA;
+const Continuity = 0xB;
+const hFE = 0xC;
+
+function writeMeasurement(fun, measurement, scale, overload) {
+	switch(fun) {
+		case DCV:
+			measure = "Vdc=";
+			units = "V";
+			break;
+		case ACV:
+			measure = "Vac=";
+			units = "V";
+			break;
+		case DCA:
+			measure = "Idc=";
+			units = "A";
+			break;
+		case ACA:
+			units = "Iac=";
+			units = "A";
+			break;
+		case Ohm:
+			measure = "R=";
+			units = "Ohms";
+			break;
+		case Cap:
+			measure = "C=";
+			units = "F";
+			break;
+		case Hz:
+			measure = "Frequency=";
+			units = "Hz";
+			break;
+		case Duty:
+			measure = "Duty=";
+			units = "%";
+			break;
+		case TempC:
+			measure = "Temperature=";
+			units = "°C";
+			break;
+		case TempF:
+			measure = "Temperature=";
+			units = "F";
+			break;
+		case Diode:
+			measure = "Diode=";
+			units = "V";
+			break;
+		case Continuity:
+			measure = "Continuity=";
+			units = "Ohms";
+			break;
+		case hFE:
+			measure = "hFE=";
+			units = "";
+			break;
+		default:
+			measure = "?=";
+			units = "?";
+			break;
+	}
+	
+	switch(scale) {
+		case 0:
+		case 1:
+			scale = "n";
+			break;
+		case 2:
+			scale = "micro";
+			break;
+		case 3:
+			scale = "m";
+			break;
+		case 4:
+			scale = "";
+			break;
+		case 5:
+			scale = "kilo";
+			break;
+		case 6:
+			scale = "mega";
+			break;
+	}
+	if (overload) {
+		return measure + " **OVERLOAD** "+scale+units;
+	}
+	else {
+		return measure + measurement+" "+scale+units;
+	}
+}
+
+function handleNotifications(event) {
+	let value = new DataView(event.target.value.buffer);
+
+	let a = [];
+	// Convert raw data bytes to hex values just for the sake of showing something.
+	// In the "real" world, you'd use data.getUint8, data.getUint16 or even
+	// TextDecoder to process raw data bytes.
+	for (let i = 0; i < event.target.value.byteLength; i++) {
+		a.push('0x' + ('00' + value.getUint8(i).toString(16)).slice(-2));
+	}
+	
+	log('Raw notification > ' + a.join(' '));
+	
+	// See README.md on https://github.com/DeanCording/owonb35
+	func = (value.getUint16(0,true) >> 6) & 0x0f;
+	decimal = value.getUint8(0) & 0x07;	
+	scale = (value.getUint8(0) >> 3) & 0x07;
+	uint16val = value.getUint8(4)+256*value.getUint8(5);
+	if (uint16val < 0x7fff) {
+        measurement = uint16val / Math.pow(10.0, decimal);
+    } else {
+        measurement = -1.0 * (uint16val & 0x7fff) / Math.pow(10.0, decimal);
+    }
+	overload = (decimal == 0x07);
+	
+	var output = writeMeasurement(func, measurement, scale, overload)
+	console.log(output);
+	document.getElementById("measure").innerHTML = output;
+	
+}
+
+    </script>
+    <button onClick='onStartButtonClick()'>connect</button>
+    <button onClick='onStopButtonClick()'>disconnect</button>
+	<div id="measure"/>
+</body>
+</html>
