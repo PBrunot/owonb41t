@@ -5,6 +5,8 @@
     <meta charset="utf-8" />
     <title>Owon B41T+ with web bluetooth example</title>
     <script src="./dist/bt-owon-bt.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 </head>
 
 <body onload="setInterval(refreshStatus, 1000)">
@@ -434,26 +436,101 @@
             </td>
         </tr>
     </table>
+    <div>
+        <canvas id="myChart"></canvas>
+    </div>
+    <script>
+        var myChart = null;
+        function updateGraph(chartData) {
+            if (chartData.length <= 0)
+                return;
+
+            const data = {
+                labels: chartData.map(function (data) { return data["Timestamp"] }),
+                datasets: [{
+                    label: chartData[0]["Function"],
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data: chartData.map(function (data) { return data["Value"] }),
+                }]
+            };
+
+            const config = {
+                    type: 'line',
+                    data: data,
+                    options: {
+                        scales: {
+                            x: {
+                                type: 'time',
+                                stepSize: 1000,
+                            }
+                        }
+                    }
+                };
+
+            if (myChart == null) {
+                myChart = new Chart(
+                    document.getElementById('myChart'),
+                    config
+                );
+            } else {
+                myChart.data.labels = data.labels;
+                myChart.data.datasets[0].data = data.datasets[0].data;
+                myChart.data.datasets[0].label = data.datasets[0].label;
+                myChart.options = config.options;
+                myChart.update();
+            }
+
+        }
+
+    </script>
     <script language="javascript">
+        chartData = [];
+        lastData = null;
+        previousData = null;
         /* HELPERS */
         function time(text) {
             log('[' + new Date().toJSON().substr(11, 8) + '] ' + text);
         }
+        var init = 0;
 
         function refreshStatus() {
+            var new_sample = false;
             document.getElementById("status").innerHTML = OwonBT.btState.state;
-            if (OwonBT.btState.formattedResponse != '')
-            {
+            if (OwonBT.btState.formattedResponse != '') {
                 document.getElementById("measure").innerHTML = OwonBT.btState.formattedResponse + "<br/><small>(" + OwonBT.btState.responseTimeStamp + ")</small>";
+                lastData = OwonBT.btState.parsedResponse;
+
+                if (previousData == null || lastData["Timestamp"] != previousData["Timestamp"]) {
+                    previousData = lastData;
+                    new_sample = true;
+                }
             } else {
                 document.getElementById("measure").innerHTML = "No data available";
+                lastData = null;
             }
-            
+            // btState.parsedResponse = { "Function": func, "Measurement": measurement, "Scale": scale, "Overload": overload, "Timestamp": timestamp};
+            if (lastData != null && (previousData == null || previousData["Function description"] != lastData["Function description"])) {
+                chartData = [];
+            }
+            if (lastData != null && previousData != null && new_sample) {
+                chartData.push({ 
+                    "Value": lastData["Value"], 
+                    "Timestamp": lastData["Timestamp"].getTime(), 
+                    "Function": lastData["Function description"] });
+                    
+                if (chartData.length > 30) {
+                    chartData.shift();
+                }
+                updateGraph(chartData);
+            }
+
         }
-        document.getElementById("btnStart").onclick=async ()=>{await OwonBT.Start()};
-        document.getElementById("btnStop").onclick=async ()=>{await OwonBT.Stop()};
-        document.getElementById("btnDebugLog").onclick=async ()=>{await OwonBT.SetLogLevel(1)};
+        document.getElementById("btnStart").onclick = async () => { await OwonBT.Start() };
+        document.getElementById("btnStop").onclick = async () => { await OwonBT.Stop() };
+        document.getElementById("btnDebugLog").onclick = async () => { await OwonBT.SetLogLevel(1) };
     </script>
+
 </body>
 
 </html>

@@ -408,7 +408,7 @@ function formatParsedResponse(fun, measurement, scale, overload) {
     }
 }
 
-function parseResponse(buffer) {
+function parseResponse(buffer, timestamp) {
     let value = new DataView(buffer);
     var measurement = NaN;
 
@@ -424,7 +424,82 @@ function parseResponse(buffer) {
     }
     var overload = (decimal == 0x07);
 
-    btState.parsedResponse = { "Function": func, "Measurement": measurement, "Scale": scale, "Overload": overload };
+    var normalization = 1.0;
+    switch (scale) {
+        case 0:
+        case 1:
+            normalization = 0.000000001;
+            break;
+        case 2:
+            normalization = 0.000001;
+            break;
+        case 3:
+            normalization = 0.001;
+            break;
+        case 4:
+            normalization = 1.0;
+            break;
+        case 5:
+            normalization = 1000.0;
+            break;
+        case 6:
+            normalization = 1000000.0;
+            break;
+    }
+    var functionDesc = '';
+    switch (func) {
+        case DCV:
+            functionDesc = "Voltage (DC) - V";
+            break;
+        case ACV:
+            functionDesc = "Voltage (AC) - V";
+            break;
+        case DCA:
+            functionDesc = "Current (DC) - A"
+            break;
+        case ACA:
+            functionDesc = "Current (AC) - A"
+            break;
+        case Ohm:
+            functionDesc = "Resistance - Ohms"
+            break;
+        case Cap:
+            functionDesc = "Capacitance - F"
+            break;
+        case Hz:
+            functionDesc = "Frequency - Hz"
+            break;
+        case Duty:
+            functionDesc = "Duty cycle - %"
+            break;
+        case TempC:
+            functionDesc = "Temperature - °C"
+            break;
+        case TempF:
+            functionDesc = "Temperature - °F";
+            break;
+        case Diode:
+            functionDesc = "Diode - V";
+            break;
+        case Continuity:
+            functionDesc = "Continuity - Ohms";
+            break;
+        case hFE:
+            functionDesc = "hFE";
+            break;
+        default:
+            functionDesc = "?";
+            break;
+    }
+
+    btState.parsedResponse = { 
+                         "Function": func, 
+                         "Function description": functionDesc,
+                         "Measurement": measurement, 
+                         "Scale": scale,
+                         "Overload": overload, 
+                         "Timestamp": timestamp, 
+                         "Value" : measurement*normalization };
     btState.formattedResponse = formatParsedResponse(func, measurement, scale, overload);
 }
 
@@ -598,7 +673,7 @@ async function refresh() {
     {
         if (btState != null && btState.response != null)
         {
-            parseResponse(btState.response);
+            parseResponse(btState.response, btState.responseTimeStamp);
             btState.response = null;
         }
         log.debug("\t\tFinished refreshing current state");
