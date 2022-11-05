@@ -1,4 +1,4 @@
-name: "Release on npm"
+name: "Release on npm owon"
 on:
   push:
     branches:
