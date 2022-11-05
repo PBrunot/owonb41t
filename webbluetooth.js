@@ -83,7 +83,7 @@ let btState = new APIState();
  * */
 async function stateMachine() {
     var nextAction;
-    var DELAY_MS = (simulation ? 20 : 500); // Update the status every X ms.
+    var DELAY_MS = (simulation ? 20 : 600); // Update the status every X ms.
     var TIMEOUT_MS = (simulation ? 1000 : 30000); // Give up some operations after X ms.
     btState.started = true;
 
@@ -596,9 +596,11 @@ async function refresh() {
     btState.state = State.BUSY;
     try
     {
-        if (btState != null)
+        if (btState != null && btState.response != null)
+        {
             parseResponse(btState.response);
-        btState.response = null;
+            btState.response = null;
+        }
         log.debug("\t\tFinished refreshing current state");
     }
     catch (err) {
