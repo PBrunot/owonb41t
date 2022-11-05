@@ -40,6 +40,5 @@ async function Stop() {
 
 exports.Start = Start;
 exports.Stop = Stop;
-exports.stateMachine = BT.stateMachine;
 exports.btState = BT.btState;
 exports.State = BT.State;
