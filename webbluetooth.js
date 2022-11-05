@@ -288,6 +288,7 @@ function arrayBufferConcat() {
  * @param {any} event
  */
 function handleNotifications(event) {
+    console.log(event);
     let value = event.target.value;
     if (value != null) {
         log.debug('<< ' + utils.buf2hex(value.buffer));
@@ -296,7 +297,11 @@ function handleNotifications(event) {
         } else {
             btState.response = value.buffer.slice();
         }
-        btState.responseTimeStamp = new Date();
+        // Keep the event original timestamp !!
+        btState.responseTimeStamp = new Date(event.timeStamp);
+
+        parseResponse(btState.response, btState.responseTimeStamp);
+        btState.response = null;
     }
 }
 
@@ -669,18 +674,7 @@ async function fakeSubscribe() {
  * */
 async function refresh() {
     btState.state = State.BUSY;
-    try
-    {
-        if (btState != null && btState.response != null)
-        {
-            parseResponse(btState.response, btState.responseTimeStamp);
-            btState.response = null;
-        }
-        log.debug("\t\tFinished refreshing current state");
-    }
-    catch (err) {
-        log.warn("** error while refreshing: " + err.message);
-    }
+    // Do something
     btState.state = State.IDLE;
 }
 
