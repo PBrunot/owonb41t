@@ -418,6 +418,8 @@
                 Status:<div id="status" class="status">?</div><br />
                 <button id="btnStart">START</button>
                 <button id="btnStop">STOP</button>
+                &nbsp;
+                <button id="btnDebugLog">LOG (Debug)</button>
                 <br /><br />
                 Latest data: <div id="measure" class="output"></div>
                 <br />
@@ -439,26 +441,12 @@
         }
 
         function refreshStatus() {
-            var text = '';
-            switch (OwonBT.btState.state) {
-                case '0':
-                    text = '<font color="red">Not connected</font>';
-                    break;
-                case '1':
-                    text = '<font color="orange">Connecting...</font>';
-                    break;
-                case '2':
-                    text = '<font color="green">Connected</font>';
-                    break;
-                default:
-                    text = '<font color="red">' + status + '</font>';
-                    break;
-            }
             document.getElementById("status").innerHTML = OwonBT.btState.state;
             document.getElementById("measure").innerHTML = OwonBT.btState.formattedResponse;
         }
         document.getElementById("btnStart").onclick=async ()=>{await OwonBT.Start()};
         document.getElementById("btnStop").onclick=async ()=>{await OwonBT.Stop()};
+        document.getElementById("btnDebugLog").onclick=async ()=>{await OwonBT.SetLogLevel(1)};
     </script>
 </body>
 

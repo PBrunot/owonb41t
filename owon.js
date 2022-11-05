@@ -38,7 +38,12 @@ async function Stop() {
     return true;
 }
 
+function SetLogLevel(level) {
+    log.setLevel(level, false);
+}
+
 exports.Start = Start;
 exports.Stop = Stop;
+exports.SetLogLevel = SetLogLevel;
 exports.btState = BT.btState;
 exports.State = BT.State;

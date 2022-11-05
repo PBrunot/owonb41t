@@ -6,6 +6,7 @@ describe('Basic API tests, without simulation', () => {
         expect(OwonBT.Stop).not.toBeNull();
         expect(OwonBT.btState).not.toBeNull();
         expect(OwonBT.State).not.toBeNull();
+        expect(OwonBT.SetLogLevel).not.toBeNull();
     })
 })
 
