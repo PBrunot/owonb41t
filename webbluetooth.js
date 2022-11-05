@@ -504,7 +504,8 @@ function parseResponse(buffer, timestamp) {
                          "Scale": scale,
                          "Overload": overload, 
                          "Timestamp": timestamp, 
-                         "Value" : measurement*normalization };
+                         "Value" : measurement*normalization,
+                         "DateTime": new Date() };
     btState.formattedResponse = formatParsedResponse(func, measurement, scale, overload);
 }
 

@@ -5,6 +5,7 @@
     <meta charset="utf-8" />
     <title>Owon B41T+ with web bluetooth example</title>
     <script src="./dist/bt-owon-bt.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 </head>
@@ -418,10 +419,10 @@
                 </p>
                 <br />
                 Status:<div id="status" class="status">?</div><br />
-                <button id="btnStart">START</button>
-                <button id="btnStop">STOP</button>
+                <button id="btnStart" class="btn btn-primary">START</button>
+                <button id="btnStop" class="btn btn-primary">STOP</button>
                 &nbsp;
-                <button id="btnDebugLog">LOG (Debug)</button>
+                <button id="btnDebugLog" class="btn btn-info">LOG (Debug)</button>
                 <br /><br />
                 Latest data: <div id="measure" class="output"></div>
                 <br />
@@ -452,6 +453,7 @@
                     backgroundColor: 'rgb(255, 99, 132)',
                     borderColor: 'rgb(255, 99, 132)',
                     data: chartData.map(function (data) { return data["Value"] }),
+                    cubicInterpolationMode: 'monotone'
                 }]
             };
 
@@ -498,7 +500,7 @@
             var new_sample = false;
             document.getElementById("status").innerHTML = OwonBT.btState.state;
             if (OwonBT.btState.formattedResponse != '') {
-                document.getElementById("measure").innerHTML = OwonBT.btState.formattedResponse + "<br/><small>(" + OwonBT.btState.responseTimeStamp + ")</small>";
+                document.getElementById("measure").innerHTML = OwonBT.btState.formattedResponse + "<br/><small>(" + OwonBT.btState.parsedResponse.DateTime + ")</small>";
                 lastData = OwonBT.btState.parsedResponse;
 
                 if (previousData == null || lastData["Timestamp"] != previousData["Timestamp"]) {
@@ -519,7 +521,7 @@
                     "Timestamp": lastData["Timestamp"].getTime(), 
                     "Function": lastData["Function description"] });
                     
-                if (chartData.length > 30) {
+                if (chartData.length > 50) {
                     chartData.shift();
                 }
                 updateGraph(chartData);
