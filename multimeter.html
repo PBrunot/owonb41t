@@ -429,8 +429,8 @@
             </td>
         <tr>
             <td colspan=2>
-                Log :<br />
-                <div id="log" class="output"></div>
+                Log (see Developer Tools console)<br />
+                To adjust: OwonBT.SetLogLevel(value 0..5) where 0=TRACE, 5=SILENT
             </td>
         </tr>
     </table>
@@ -442,7 +442,13 @@
 
         function refreshStatus() {
             document.getElementById("status").innerHTML = OwonBT.btState.state;
-            document.getElementById("measure").innerHTML = OwonBT.btState.formattedResponse;
+            if (OwonBT.btState.formattedResponse != '')
+            {
+                document.getElementById("measure").innerHTML = OwonBT.btState.formattedResponse + "<br/><small>(" + OwonBT.btState.responseTimeStamp + ")</small>";
+            } else {
+                document.getElementById("measure").innerHTML = "No data available";
+            }
+            
         }
         document.getElementById("btnStart").onclick=async ()=>{await OwonBT.Start()};
         document.getElementById("btnStop").onclick=async ()=>{await OwonBT.Stop()};

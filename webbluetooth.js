@@ -47,6 +47,7 @@ class APIState {
 
         // last notification
         this.response = null;
+        this.responseTimeStamp = new Date();
         this.parsedResponse = null;
         this.formattedResponse = '';
 
@@ -82,7 +83,7 @@ let btState = new APIState();
  * */
 async function stateMachine() {
     var nextAction;
-    var DELAY_MS = (simulation ? 20 : 750); // Update the status every X ms.
+    var DELAY_MS = (simulation ? 20 : 500); // Update the status every X ms.
     var TIMEOUT_MS = (simulation ? 1000 : 30000); // Give up some operations after X ms.
     btState.started = true;
 
@@ -295,6 +296,7 @@ function handleNotifications(event) {
         } else {
             btState.response = value.buffer.slice();
         }
+        btState.responseTimeStamp = new Date();
     }
 }
 
