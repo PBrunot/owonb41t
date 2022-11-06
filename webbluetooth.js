@@ -415,6 +415,8 @@ function formatParsedResponse(fun, measurement, scale, overload) {
 
     switch (scale) {
         case 0:
+            scale = "";
+            break;
         case 1:
             scale = "n";
             break;
@@ -461,6 +463,8 @@ function parseResponse(buffer, timestamp) {
     var normalization = 1.0;
     switch (scale) {
         case 0:
+            normalization = 1.0;
+            break;
         case 1:
             normalization = 0.000000001;
             break;

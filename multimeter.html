@@ -12,7 +12,7 @@
         src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 </head>
 
-<body onload="setInterval(refreshStatus, 500)">
+<body onload="setInterval(refreshStatus, 450)">
     <style>
         .output {
             background-color: #f0f0f0;
@@ -106,7 +106,7 @@
     </div>
     <script>
         var myChart = null;
-        function updateGraph(chartData) {
+        async function updateGraph(chartData) {
             if (chartData.length <= 0)
                 return;
 
@@ -144,7 +144,7 @@
                 myChart.data.datasets[0].data = data.datasets[0].data;
                 myChart.data.datasets[0].label = data.datasets[0].label;
                 myChart.options = config.options;
-                myChart.update();
+                myChart.update('none');
             }
 
         }
@@ -160,7 +160,7 @@
         }
         var init = 0;
 
-        function refreshStatus() {
+        async function refreshStatus() {
             var new_sample = false;
             document.getElementById("status").innerHTML = OwonBT.btState.state;
             document.getElementById("stats").innerHTML = JSON.stringify(OwonBT.btState.stats).replaceAll(',', '<br/>');
@@ -189,7 +189,7 @@
                 if (chartData.length > 75) {
                     chartData.shift();
                 }
-                updateGraph(chartData);
+                await updateGraph(chartData);
             }
 
         }
