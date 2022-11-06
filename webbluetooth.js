@@ -9,6 +9,7 @@ const log = require('loglevel');
 const utils = require('./utils');
 
 var simulation = false;
+var logging = false;
 
 /*
  * Bluetooth constants
@@ -43,7 +44,7 @@ class APIState {
 
         this.started = false; // State machine status
         this.stopRequest = false; // To request disconnect
-        
+
 
         // last notification
         this.response = null;
@@ -71,7 +72,7 @@ class APIState {
         };
 
         this.options = {
-            "forceDeviceSelection" : true
+            "forceDeviceSelection": true
         }
     }
 }
@@ -83,7 +84,7 @@ let btState = new APIState();
  * */
 async function stateMachine() {
     var nextAction;
-    var DELAY_MS = (simulation ? 20 : 600); // Update the status every X ms.
+    var DELAY_MS = (simulation ? 20 : 450); // Update the status every X ms.
     var TIMEOUT_MS = (simulation ? 1000 : 30000); // Give up some operations after X ms.
     btState.started = true;
 
@@ -283,12 +284,13 @@ function arrayBufferConcat() {
     return joined.buffer;
 }
 
+var lastTimeStamp = 0;
 /**
  * Event called by bluetooth characteristics when receiving data
  * @param {any} event
  */
 function handleNotifications(event) {
-    console.log(event);
+    var delay = 0;
     let value = event.target.value;
     if (value != null) {
         log.debug('<< ' + utils.buf2hex(value.buffer));
@@ -299,8 +301,35 @@ function handleNotifications(event) {
         }
         // Keep the event original timestamp !!
         btState.responseTimeStamp = new Date(event.timeStamp);
+        if (lastTimeStamp > 0) {
+            delay = event.timeStamp - lastTimeStamp; // ms between notifications
+        } else {
+            delay = 0;
+        }
+        lastTimeStamp = event.timeStamp;
 
         parseResponse(btState.response, btState.responseTimeStamp);
+
+        // Log the packets
+        if (logging) {
+            var packet = { 'notification': utils.buf2hex(btState.response), 'parsed': btState.parsedResponse };
+            var packets = window.localStorage.getItem("OwonBTTrace");
+            if (packets == null) {
+                packets = []; // initialize array
+            }
+            else {
+                packets = JSON.parse(packets); // Restore the json persisted object
+            }
+            packets.push(packet); // Add the new object
+            window.localStorage.setItem("OwonBTTrace", JSON.stringify(packets));
+        }
+        
+        if (delay > 0) {
+            btState.stats["lastResponseTime"] = delay;
+            btState.stats["responseTime"] = (btState.stats["responseTime"] * (btState.stats["responses"]-1.0) + delay) / btState.stats["responses"];
+        }
+        btState.stats["responses"]++;
+
         btState.response = null;
     }
 }
@@ -497,15 +526,17 @@ function parseResponse(buffer, timestamp) {
             break;
     }
 
-    btState.parsedResponse = { 
-                         "Function": func, 
-                         "Function description": functionDesc,
-                         "Measurement": measurement, 
-                         "Scale": scale,
-                         "Overload": overload, 
-                         "Timestamp": timestamp, 
-                         "Value" : measurement*normalization,
-                         "DateTime": new Date() };
+    btState.parsedResponse = {
+        "Function": func,
+        "Function description": functionDesc,
+        "Measurement": measurement,
+        "Scale": scale,
+        "Overload": overload,
+        "Timestamp": timestamp,
+        "Value": measurement * normalization,
+        "DateTime": new Date(),
+        "Decimal": decimal
+    };
     btState.formattedResponse = formatParsedResponse(func, measurement, scale, overload);
 }
 
@@ -683,4 +714,11 @@ function SetSimulation(value) {
     simulation = value;
 }
 
-module.exports = { stateMachine, SetSimulation, btState, State };
+/**
+ * Enables or disable writing the notifications into a local storage file
+ * @param {boolean} value 
+ */
+function SetPacketLog(value) {
+    logging = value;
+}
+module.exports = { stateMachine, SetSimulation, btState, State, SetPacketLog };

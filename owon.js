@@ -47,3 +47,4 @@ exports.Stop = Stop;
 exports.SetLogLevel = SetLogLevel;
 exports.btState = BT.btState;
 exports.State = BT.State;
+exports.SetPacketLog = BT.SetPacketLog;
