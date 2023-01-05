@@ -1,6 +1,6 @@
 {
   "name": "owonb41t",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A web-bluetooth interface for the OWON B41T+ multimeter",
   "main": "owon.js",
   "scripts": {
