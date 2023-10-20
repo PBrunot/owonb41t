@@ -2,7 +2,7 @@
 Javascript interface for digital multimeter OWON B41T+
 Test it here: https://pbrunot.github.io/owonb41t/multimeter.html (requires a modern browser with Javascript Bluetooth enabled)
 
-![image](https://user-images.githubusercontent.com/6236243/200131788-34e4e4c0-ba97-4ba4-a363-8dcc8de0e7fc.png)
+![image](https://github.com/PBrunot/owonb41t/assets/6236243/b0cb0a81-5eff-47bf-b08c-5f332fa6a527)
 
 
 # Owon meters protocol
