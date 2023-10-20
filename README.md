@@ -2,7 +2,7 @@
 
 Javascript interface for digital multimeter OWON B41T+
 
-Test it here: ![Demo](https://pbrunot.github.io/owonb41t/multimeter.html) 
+Test it here in your browser: [Github webpage](https://pbrunot.github.io/owonb41t/multimeter.html) 
 
 ![image](https://github.com/PBrunot/owonb41t/assets/6236243/b0cb0a81-5eff-47bf-b08c-5f332fa6a527)
 
@@ -10,7 +10,7 @@ Test it here: ![Demo](https://pbrunot.github.io/owonb41t/multimeter.html)
 
 - It requires a modern browser with Javascript Bluetooth enabled (tested with Chrome and Edge)
 - Bluetooth BLE 4.0+ hardware interface
-- Check bluetooth first with Chrome browser: ![BT internals](chrome://bluetooth-internals)
+- Check bluetooth first with Chrome browser: chrome://bluetooth-internals
 
 I tested with TP-Link UB400 adapted module on Desktop Windows 10.
 
@@ -25,5 +25,5 @@ Basically every BT notification contains 3 int16:
 
 # Bluetooth with Javascript
 
-Reference document : https://googlechrome.github.io/samples/web-bluetooth/index.html
+Reference document : [Web Bluetooth](https://googlechrome.github.io/samples/web-bluetooth/index.html)
 
