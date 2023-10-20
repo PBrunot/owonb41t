@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
         integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.js"></script>
-    <script
-        src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js" type="module"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"
+        type="module"></script>
 </head>
 
 <body onload="setInterval(refreshStatus, 450)">
@@ -81,6 +81,11 @@
                 <br /><br />
                 <strong>Latest data:</strong>
                 <div id="measure" class="output"></div>
+                <!-- LCD Display Container -->
+                <div id="lcd-container" class="lcd-container"></div>
+
+                <!-- Plugin Script -->
+                <script src="./dist/lcd.js"></script>
             </div>
             <div class="col">
                 <img src="dmm.png" />
@@ -106,6 +111,15 @@
     </div>
     <script>
         var myChart = null;
+        var lcd = new LCD({
+            elem: document.getElementById("lcd-container"),
+            rows: 1, // number of character rows on the LCD screen
+            columns: 10, // number of character columns on the LCD screen
+            pixelSize: 4, // size of each pixel
+            pixelColor: "#000", // color of the pixel
+        });
+
+
         async function updateGraph(chartData) {
             if (chartData.length <= 0)
                 return;
@@ -166,6 +180,17 @@
             document.getElementById("stats").innerHTML = JSON.stringify(OwonBT.btState.stats).replaceAll(',', '<br/>');
             if (OwonBT.btState.formattedResponse != '') {
                 document.getElementById("measure").innerHTML = OwonBT.btState.formattedResponse + "<br/><small>(" + OwonBT.btState.parsedResponse.DateTime + ")</small>";
+
+                if (OwonBT.btState.parsedResponse != null) {
+                    lcd.clearScreen();
+                    if (OwonBT.btState.parsedResponse.Overload) {
+                        lcd.writeString({ string: "OL", offset: 0 });
+                    }
+                    else {
+                        lcd.writeString({ string: OwonBT.btState.parsedResponse["Measurement"].toFixed(4).toString().padStart(12, " "), offset: 0 });
+                    }
+                }
+
                 lastData = OwonBT.btState.parsedResponse;
                 if (previousData == null || lastData["Timestamp"] != previousData["Timestamp"]) {
                     if (previousData == null || previousData["Function"] != lastData["Function"]) {

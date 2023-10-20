@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/PBrunot/owonb41t#readme",
   "dependencies": {
+    "dot-matrix-lcd": "^1.0.0",
     "loglevel": "^1.8.0"
   },
   "devDependencies": {
