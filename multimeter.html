@@ -1,18 +1,20 @@
 ﻿<!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <meta charset="utf-8" />
     <title>Owon B41T+ with web bluetooth example</title>
     <script src="./dist/bt-owon-bt.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
-        integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.js"
+        integrity="sha384-+6dh2CHKuNJGU8U8VwpCGO85vKlV6/wCfFb5BKFR9X6P5P6qf/QVBIVpyV8t7B6p" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"
         type="module"></script>
 </head>
 
-<body onload="setInterval(refreshStatus, 450)">
+<body>
     <style>
         .output {
             background-color: #f0f0f0;
@@ -58,27 +60,55 @@
         code {
             font-family: Inconsolata, Consolas, monospace;
         }
+
+        .lcd-container {
+            margin: 1rem 0;
+            padding: 1rem;
+            background-color: #2a2a2a;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+
+        .status-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .btn-group {
+            gap: 0.5rem;
+        }
+
+        .multimeter-image {
+            max-width: 100%;
+            height: auto;
+        }
     </style>
-    <h1>Owon B41T+ Multimeter<br /></h1>
+    <header class="container mt-3">
+        <h1>Owon B41T+ Multimeter</h1>
+    </header>
     <div class="container">
         <div class="row">
             <div class="col">
                 <p>
-                    This webpage uses Bluetooth to get the current reading from Owon multimeter using Bluetooth. A
-                    Bluetooth 4.0+ chip is required.
-                <ul>
-                    <li>Enable bluetooth on multimeter first.
-                    <li>Then click Connect and select "BDM" or "LILLIPUT" device.
-                    <li>The measure shall be shown below
-                </ul>
+                    This webpage uses Web Bluetooth to get real-time readings from your Owon multimeter. A
+                    Bluetooth 4.0+ capable device is required.
                 </p>
-                <br />
-                Status:<div id="status" class="status">?</div><br />
-                <button id="btnStart" class="btn btn-primary">START</button>
-                <button id="btnStop" class="btn btn-primary">STOP</button>
-                &nbsp;
-                <button id="btnDebugLog" class="btn btn-info">LOG (Debug)</button>
-                <br /><br />
+                <ol>
+                    <li>Enable Bluetooth on your multimeter first.</li>
+                    <li>Click START and select "BDM" or "LILLIPUT" device when prompted.</li>
+                    <li>Measurements will be displayed below in real-time.</li>
+                </ol>
+                <div class="status-container">
+                    <strong>Status:</strong>
+                    <div id="status" class="status">Disconnected</div>
+                </div>
+                <div class="btn-group d-flex gap-2 mb-3" role="group" aria-label="Multimeter controls">
+                    <button id="btnStart" class="btn btn-success">START</button>
+                    <button id="btnStop" class="btn btn-danger">STOP</button>
+                    <button id="btnDebugLog" class="btn btn-info">ENABLE DEBUG</button>
+                </div>
                 <strong>Latest data:</strong>
                 <div id="measure" class="output"></div>
                 <!-- LCD Display Container -->
@@ -88,139 +118,269 @@
                 <script src="./dist/lcd.js"></script>
             </div>
             <div class="col">
-                <img src="dmm.png" />
+                <img src="dmm.png" alt="Owon B41T+ Digital Multimeter" class="multimeter-image" />
             </div>
             <div class="col">
                 <strong>Statistics:</strong>
                 <div id="stats" class="output"></div>
-                Logs (see Developer Tools console):
-                <ul>
-                    <li>To adjust: OwonBT.SetLogLevel(value 0..5) where 0=TRACE, 5=SILENT</li>
-                    <li>To enable packet logging into application local storage : OwonBT.SetPacketLog(true)</li>
-                </ul>
-                <br />
-                With auto-range function active, the meter may send invalid data (wrong scale) if the measure is taken
-                in
-                the middle of the range update. To have consistent results, disable the auto range.
+                <details>
+                    <summary><strong>Developer Information</strong></summary>
+                    <p><small>Check Developer Tools console for detailed logs.</small></p>
+                    <ul>
+                        <li><code>OwonBT.SetLogLevel(0-5)</code> - Adjust logging (0=TRACE, 5=SILENT)</li>
+                        <li><code>OwonBT.SetPacketLog(true)</code> - Enable packet logging to localStorage</li>
+                    </ul>
+                </details>
+                <div class="alert alert-warning mt-3" role="alert">
+                    <strong>Note:</strong> With auto-range active, the meter may send inconsistent data during range transitions.
+                    For consistent results, disable auto-range on your multimeter.
+                </div>
             </div>
         </div>
     </div>
-    <div class="container">
-        <strong>Realtime chart:</strong><br />
-        <canvas id="myChart"></canvas>
-    </div>
+    <section class="container mt-4">
+        <h2>Real-time Chart</h2>
+        <div class="chart-container" style="position: relative; height: 400px;">
+            <canvas id="myChart" aria-label="Multimeter measurements over time"></canvas>
+        </div>
+    </section>
     <script>
-        var myChart = null;
-        var lcd = new LCD({
-            elem: document.getElementById("lcd-container"),
-            rows: 1, // number of character rows on the LCD screen
-            columns: 10, // number of character columns on the LCD screen
-            pixelSize: 4, // size of each pixel
-            pixelColor: "#000", // color of the pixel
-        });
+        // Global variables
+        let myChart = null;
+        let lcd = null;
+
+        // Initialize LCD display
+        function initializeLCD() {
+            try {
+                const lcdContainer = document.getElementById("lcd-container");
+                if (lcdContainer && typeof LCD !== 'undefined') {
+                    lcd = new LCD({
+                        elem: lcdContainer,
+                        rows: 1,
+                        columns: 10,
+                        pixelSize: 4,
+                        pixelColor: "#00ff00"
+                    });
+                    lcd.writeString({ string: "READY", offset: 0 });
+                } else {
+                    console.warn('LCD library not available or container not found');
+                }
+            } catch (error) {
+                console.error('Failed to initialize LCD:', error);
+            }
+        }
 
 
         async function updateGraph(chartData) {
-            if (chartData.length <= 0)
-                return;
+            if (!chartData || chartData.length === 0) return;
 
-            const data = {
-                labels: chartData.map(function (data) { return data["Timestamp"] }),
-                datasets: [{
-                    label: chartData[0]["Function"],
-                    backgroundColor: 'rgb(255, 99, 132)',
-                    borderColor: 'rgb(255, 99, 132)',
-                    data: chartData.map(function (data) { return data["Value"] }),
-                    cubicInterpolationMode: 'monotone'
-                }]
-            };
+            try {
+                const data = {
+                    labels: chartData.map(item => item.Timestamp),
+                    datasets: [{
+                        label: chartData[0]?.Function || 'Measurement',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgb(54, 162, 235)',
+                        data: chartData.map(item => item.Value),
+                        fill: false,
+                        tension: 0.1
+                    }]
+                };
 
-            const config = {
-                type: 'line',
-                data: data,
-                options: {
-                    scales: {
-                        x: {
-                            type: 'time',
-                            stepSize: 1000,
+                const config = {
+                    type: 'line',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    displayFormats: {
+                                        second: 'HH:mm:ss'
+                                    }
+                                }
+                            },
+                            y: {
+                                beginAtZero: false
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
                         }
                     }
+                };
+
+                if (myChart === null) {
+                    const ctx = document.getElementById('myChart');
+                    if (ctx) {
+                        myChart = new Chart(ctx, config);
+                    }
+                } else {
+                    myChart.data = data;
+                    myChart.options = config.options;
+                    myChart.update('none');
                 }
-            };
-
-            if (myChart == null) {
-                myChart = new Chart(
-                    document.getElementById('myChart'),
-                    config
-                );
-            } else {
-                myChart.data.labels = data.labels;
-                myChart.data.datasets[0].data = data.datasets[0].data;
-                myChart.data.datasets[0].label = data.datasets[0].label;
-                myChart.options = config.options;
-                myChart.update('none');
+            } catch (error) {
+                console.error('Failed to update chart:', error);
             }
-
         }
 
     </script>
-    <script language="javascript">
-        chartData = [];
-        lastData = null;
-        previousData = null;
-        /* HELPERS */
-        function time(text) {
-            log('[' + new Date().toJSON().substr(11, 8) + '] ' + text);
+    <script>
+        // Application state
+        let chartData = [];
+        let lastData = null;
+        let previousData = null;
+        let isDebugEnabled = false;
+
+        function updateStatus() {
+            try {
+                const statusElement = document.getElementById("status");
+                const statsElement = document.getElementById("stats");
+                const measureElement = document.getElementById("measure");
+
+                if (!OwonBT || !OwonBT.btState) {
+                    statusElement.textContent = "Library not loaded";
+                    return;
+                }
+
+                statusElement.textContent = OwonBT.btState.state || "Unknown";
+
+                // Format stats for better readability
+                const stats = OwonBT.btState.stats || {};
+                statsElement.innerHTML = Object.entries(stats)
+                    .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
+                    .join('<br/>');
+
+                if (OwonBT.btState.formattedResponse) {
+                    const timestamp = OwonBT.btState.parsedResponse?.DateTime || new Date();
+                    measureElement.innerHTML = `
+                        ${OwonBT.btState.formattedResponse}
+                        <br/><small class="text-muted">(${timestamp})</small>
+                    `;
+
+                    updateLCDDisplay();
+                    processNewMeasurement();
+                } else {
+                    measureElement.innerHTML = '<span class="text-muted">No data available</span>';
+                    lastData = null;
+                }
+            } catch (error) {
+                console.error('Error updating status:', error);
+            }
         }
-        var init = 0;
 
-        async function refreshStatus() {
-            var new_sample = false;
-            document.getElementById("status").innerHTML = OwonBT.btState.state;
-            document.getElementById("stats").innerHTML = JSON.stringify(OwonBT.btState.stats).replaceAll(',', '<br/>');
-            if (OwonBT.btState.formattedResponse != '') {
-                document.getElementById("measure").innerHTML = OwonBT.btState.formattedResponse + "<br/><small>(" + OwonBT.btState.parsedResponse.DateTime + ")</small>";
+        function updateLCDDisplay() {
+            if (!lcd || !OwonBT.btState.parsedResponse) return;
 
-                if (OwonBT.btState.parsedResponse != null) {
-                    lcd.clearScreen();
-                    if (OwonBT.btState.parsedResponse.Overload) {
-                        lcd.writeString({ string: "OL", offset: 0 });
-                    }
-                    else {
-                        lcd.writeString({ string: OwonBT.btState.parsedResponse["Measurement"].toFixed(4).toString().padStart(12, " "), offset: 0 });
-                    }
+            try {
+                lcd.clearScreen();
+                if (OwonBT.btState.parsedResponse.Overload) {
+                    lcd.writeString({ string: "OL", offset: 0 });
+                } else {
+                    const measurement = OwonBT.btState.parsedResponse.Measurement;
+                    const displayValue = measurement.toFixed(4).toString().padStart(10, " ");
+                    lcd.writeString({ string: displayValue, offset: 0 });
                 }
+            } catch (error) {
+                console.error('Error updating LCD:', error);
+            }
+        }
 
-                lastData = OwonBT.btState.parsedResponse;
-                if (previousData == null || lastData["Timestamp"] != previousData["Timestamp"]) {
-                    if (previousData == null || previousData["Function"] != lastData["Function"]) {
-                        chartData = []; // Reset the chart on function change
-                    }
-                    previousData = lastData;
-                    new_sample = true;
+        function processNewMeasurement() {
+            const currentData = OwonBT.btState.parsedResponse;
+            if (!currentData) return;
+
+            let isNewSample = false;
+
+            if (!previousData || currentData.Timestamp.getTime() !== previousData.Timestamp.getTime()) {
+                if (!previousData || previousData.Function !== currentData.Function) {
+                    chartData = []; // Reset chart on function change
                 }
-            } else {
-                document.getElementById("measure").innerHTML = "No data available";
-                lastData = null;
+                previousData = currentData;
+                isNewSample = true;
             }
 
-            if (lastData != null && previousData != null && new_sample) {
+            lastData = currentData;
+
+            if (isNewSample) {
                 chartData.push({
-                    "Value": lastData["Overload"] ? NaN : lastData["Value"],
-                    "Timestamp": lastData["Timestamp"].getTime(),
-                    "Function": lastData["Function description"]
+                    Value: currentData.Overload ? null : currentData.Value,
+                    Timestamp: currentData.Timestamp.getTime(),
+                    Function: currentData["Function description"]
                 });
 
+                // Keep only last 75 data points
                 if (chartData.length > 75) {
                     chartData.shift();
                 }
-                await updateGraph(chartData);
-            }
 
+                updateGraph(chartData);
+            }
         }
-        document.getElementById("btnStart").onclick = async () => { await OwonBT.Start() };
-        document.getElementById("btnStop").onclick = async () => { await OwonBT.Stop() };
-        document.getElementById("btnDebugLog").onclick = async () => { await OwonBT.SetLogLevel(1) };
+        // Event handlers
+        async function handleStart() {
+            try {
+                document.getElementById("btnStart").disabled = true;
+                await OwonBT.Start();
+            } catch (error) {
+                console.error('Failed to start:', error);
+                alert('Failed to start connection. Please check console for details.');
+            } finally {
+                document.getElementById("btnStart").disabled = false;
+            }
+        }
+
+        async function handleStop() {
+            try {
+                document.getElementById("btnStop").disabled = true;
+                await OwonBT.Stop();
+                if (lcd) {
+                    lcd.clearScreen();
+                    lcd.writeString({ string: "STOPPED", offset: 0 });
+                }
+            } catch (error) {
+                console.error('Failed to stop:', error);
+            } finally {
+                document.getElementById("btnStop").disabled = false;
+            }
+        }
+
+        function toggleDebugLog() {
+            try {
+                isDebugEnabled = !isDebugEnabled;
+                OwonBT.SetLogLevel(isDebugEnabled ? 1 : 3);
+                const btn = document.getElementById("btnDebugLog");
+                btn.textContent = isDebugEnabled ? "DISABLE DEBUG" : "ENABLE DEBUG";
+                btn.className = isDebugEnabled ? "btn btn-warning" : "btn btn-info";
+            } catch (error) {
+                console.error('Failed to toggle debug:', error);
+            }
+        }
+
+        // Initialize application
+        function initializeApp() {
+            initializeLCD();
+
+            // Set up event listeners
+            document.getElementById("btnStart").addEventListener('click', handleStart);
+            document.getElementById("btnStop").addEventListener('click', handleStop);
+            document.getElementById("btnDebugLog").addEventListener('click', toggleDebugLog);
+
+            // Start status updates
+            setInterval(updateStatus, 450);
+        }
+
+        // Start when DOM is loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
     </script>
 
 </body>
