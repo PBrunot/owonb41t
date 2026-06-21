@@ -20,10 +20,10 @@ jobs:
       with:
         node-version: 22
         registry-url: https://registry.npmjs.org
-    - name: Strip _authToken from .npmrc so npm 10 falls through to OIDC exchange
-      run: echo "registry=https://registry.npmjs.org/" > "$NPM_CONFIG_USERCONFIG"
     - run: npm ci
     - run: npm run dist
     - run: npm run dev
     - run: npm test
     - run: npm publish --provenance --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
