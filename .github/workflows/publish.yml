@@ -20,8 +20,8 @@ jobs:
       with:
         node-version: 22
         registry-url: https://registry.npmjs.org
-    - name: Clear NODE_AUTH_TOKEN so npm uses OIDC exchange
-      run: echo "NODE_AUTH_TOKEN=" >> $GITHUB_ENV
+    - name: Strip _authToken from .npmrc so npm 10 falls through to OIDC exchange
+      run: echo "registry=https://registry.npmjs.org/" > "$NPM_CONFIG_USERCONFIG"
     - run: npm ci
     - run: npm run dist
     - run: npm run dev
