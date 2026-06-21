@@ -25,8 +25,7 @@ let waitForTimeout = async function waitFor(f, timeoutSec) {
  function Parse(enumtype, enumvalue) {
     for (var enumName in enumtype) {
         if (enumtype[enumName] == enumvalue) {
-            /*jshint -W061 */
-            return eval([enumtype + "." + enumName]);
+            return enumtype[enumName];
         }
     }
     return null;

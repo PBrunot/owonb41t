@@ -102,7 +102,7 @@ async function stateMachine() {
         btState.state = State.STOPPING;
     }
 
-    log.debug("\State:" + btState.state);
+    log.debug("\tState:" + btState.state);
     switch (btState.state) {
         case State.NOT_CONNECTED: // initial state on Start()
             if (simulation) {
@@ -204,10 +204,7 @@ async function stateMachine() {
  * */
 async function processCommand() {
     try {
-        command.error = false;
-        command.pending = false;
         btState.command = null;
-
         btState.state = State.IDLE;
         log.debug("\t\tCompleted command executed");
     }
@@ -215,9 +212,6 @@ async function processCommand() {
         log.error("** error while executing command: " + err);
         btState.state = State.METER_INIT;
         btState.stats["exceptions"]++;
-        if (err instanceof modbus.ModbusError)
-            btState.stats["modbus_errors"]++;
-        return;
     }
 }
 
@@ -368,7 +362,7 @@ function formatParsedResponse(fun, measurement, scale, overload) {
             units = "A";
             break;
         case ACA:
-            units = "Iac=";
+            measure = "Iac=";
             units = "A";
             break;
         case Ohm:
