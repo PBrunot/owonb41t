@@ -8,6 +8,7 @@ jobs:
   release:
     name: npm-publish
     runs-on: ubuntu-latest
+    environment: npm-publish
     permissions:
       contents: read
       id-token: write
@@ -18,7 +19,6 @@ jobs:
       uses: actions/setup-node@v6
       with:
         node-version: 22
-        registry-url: https://registry.npmjs.org
     - run: npm ci
     - run: npm run dist
     - run: npm run dev
