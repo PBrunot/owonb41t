@@ -19,11 +19,20 @@ jobs:
       uses: actions/setup-node@v6
       with:
         node-version: 22
-        registry-url: https://registry.npmjs.org
+    - name: Configure npm for trusted publishing (no token)
+      run: |
+        npm config set registry https://registry.npmjs.org/
+        npm config set //registry.npmjs.org/:_authToken ""
+        echo "--- npm version ---"
+        npm --version
+        echo "--- npm config ---"
+        npm config list
+        echo "--- .npmrc ---"
+        cat ~/.npmrc 2>/dev/null || echo "(no ~/.npmrc)"
+        echo "--- OIDC env ---"
+        echo "ACTIONS_ID_TOKEN_REQUEST_URL=${ACTIONS_ID_TOKEN_REQUEST_URL:+set}"
     - run: npm ci
     - run: npm run dist
     - run: npm run dev
     - run: npm test
-    - run: npm publish --provenance --access public
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    - run: npm publish --provenance --access public --loglevel verbose
